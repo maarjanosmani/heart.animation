@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Animation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to right, #ff758c, #ff4b5c);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="heartCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function drawHeart(x, y, size, color) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.bezierCurveTo(x - size / 2, y - size / 2, x - size, y + size / 3, x, y + size);
+            ctx.bezierCurveTo(x + size, y + size / 3, x + size / 2, y - size / 2, x, y);
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        let particles = [];
+
+        class Particle {
+            constructor(x, y, size, color, speedX, speedY) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.color = color;
+                this.speedX = speedX;
+                this.speedY = speedY;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.size *= 0.97; // Shrink effect
+            }
+
+            draw() {
+                drawHeart(this.x, this.y, this.size, this.color);
+            }
+        }
+
+        function addParticle() {
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            const size = Math.random() * 30 + 20;
+            const color = `hsl(${Math.random() * 360}, 70%, 70%)`;
+            const speedX = Math.random() * 4 - 2;
+            const speedY = Math.random() * 4 - 2;
+            particles.push(new Particle(x, y, size, color, speedX, speedY));
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((particle, index) => {
+                particle.update();
+                particle.draw();
+
+                // Remove particles that are too small
+                if (particle.size < 1) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Add particles every 100ms
+        setInterval(addParticle, 100);
+
+        // Start animation
+        animate();
+
+        // Adjust canvas size on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
