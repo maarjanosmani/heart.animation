@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heart Animation</title>
+    <title>Heart Drawing Animation</title>
     <style>
         body {
             margin: 0;
@@ -12,13 +12,12 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(to right, #ff758c, #ff4b5c);
+            background: linear-gradient(to right, #ffe6e6, #ffb3b3);
             overflow: hidden;
         }
 
         canvas {
             display: block;
-            position: absolute;
         }
     </style>
 </head>
@@ -29,78 +28,71 @@
         const canvas = document.getElementById('heartCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Set canvas size
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        function drawHeart(x, y, size, color) {
+        // Heart parameters
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const scale = 150; // Size of the heart
+        const totalDuration = 20000; // 20 seconds in milliseconds
+        const frameRate = 60; // Frames per second
+        const totalFrames = (totalDuration / 1000) * frameRate;
+        let currentFrame = 0;
+
+        // Draw a line from the given (x1, y1) to (x2, y2)
+        function drawLine(x1, y1, x2, y2) {
             ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.bezierCurveTo(x - size / 2, y - size / 2, x - size, y + size / 3, x, y + size);
-            ctx.bezierCurveTo(x + size, y + size / 3, x + size / 2, y - size / 2, x, y);
-            ctx.fillStyle = color;
-            ctx.fill();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
 
-        let particles = [];
-
-        class Particle {
-            constructor(x, y, size, color, speedX, speedY) {
-                this.x = x;
-                this.y = y;
-                this.size = size;
-                this.color = color;
-                this.speedX = speedX;
-                this.speedY = speedY;
-            }
-
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.size *= 0.97; // Shrink effect
-            }
-
-            draw() {
-                drawHeart(this.x, this.y, this.size, this.color);
-            }
+        // Heart parametric equations
+        function getHeartPoint(t) {
+            const x = scale * (16 * Math.pow(Math.sin(t), 3));
+            const y = -scale * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+            return { x: centerX + x, y: centerY + y };
         }
 
-        function addParticle() {
-            const x = canvas.width / 2;
-            const y = canvas.height / 2;
-            const size = Math.random() * 30 + 20;
-            const color = `hsl(${Math.random() * 360}, 70%, 70%)`;
-            const speedX = Math.random() * 4 - 2;
-            const speedY = Math.random() * 4 - 2;
-            particles.push(new Particle(x, y, size, color, speedX, speedY));
-        }
-
+        // Animation loop
         function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const progress = currentFrame / totalFrames; // Progress as a percentage (0 to 1)
+            const t = progress * Math.PI * 2; // Map progress to 0 to 2π
 
-            particles.forEach((particle, index) => {
-                particle.update();
-                particle.draw();
+            // Draw line on both sides of the heart
+            if (progress <= 1) {
+                const point1 = getHeartPoint(t);
+                const point2 = getHeartPoint(-t);
 
-                // Remove particles that are too small
-                if (particle.size < 1) {
-                    particles.splice(index, 1);
+                // Draw lines
+                if (currentFrame > 0) {
+                    const previousPoint1 = getHeartPoint(t - (Math.PI * 2 / totalFrames));
+                    const previousPoint2 = getHeartPoint(-(t - (Math.PI * 2 / totalFrames)));
+
+                    drawLine(previousPoint1.x, previousPoint1.y, point1.x, point1.y);
+                    drawLine(previousPoint2.x, previousPoint2.y, point2.x, point2.y);
                 }
-            });
 
-            requestAnimationFrame(animate);
+                currentFrame++;
+                requestAnimationFrame(animate);
+            }
         }
 
-        // Add particles every 100ms
-        setInterval(addParticle, 100);
-
-        // Start animation
+        // Initialize animation
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
         animate();
 
         // Adjust canvas size on window resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            currentFrame = 0; // Restart animation
+            animate();
         });
     </script>
 </body>
